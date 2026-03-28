@@ -1,0 +1,44 @@
+name: ondohosei_date
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+# アプリが動作するために必要な道具
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  sqflite: ^2.3.3
+  path: ^1.9.0
+  fl_chart: ^0.68.0
+  excel: ^4.0.6
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.4
+
+# 開発中（アイコン作成など）にだけ使う道具
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  # ↓アイコン作成ツールを追加
+  flutter_launcher_icons: "^0.13.1"
+
+# アイコン画像の設定
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  # Androidの丸いアイコンなどにも対応する設定
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon.png"
+
+flutter:
+  uses-material-design: true
+
+  # assetsフォルダの画像を使えるようにする設定
+  assets:
+    - assets/icon.png

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub:*)",
+      "Bash(gh auth:*)",
+      "Bash(git config:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\src\\ondohosei_date 2\\.github"
+    ]
+  }
+}
