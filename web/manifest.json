@@ -1,11 +1,11 @@
 {
-    "name": "ondohosei_date",
-    "short_name": "ondohosei_date",
+    "name": "温度補正システム",
+    "short_name": "温度補正",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#546E7A",
+    "theme_color": "#546E7A",
+    "description": "温度補正計算・統計管理アプリ",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
