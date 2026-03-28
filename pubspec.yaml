@@ -12,11 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  sqflite: ^2.3.3
-  path: ^1.9.0
+  shared_preferences: ^2.3.0
+  web: ^1.0.0
   fl_chart: ^0.68.0
   excel: ^4.0.6
-  permission_handler: ^11.3.1
   path_provider: ^2.1.4
 
 # 開発中（アイコン作成など）にだけ使う道具

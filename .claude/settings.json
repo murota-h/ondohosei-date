@@ -3,7 +3,8 @@
     "allow": [
       "Bash(flutter pub:*)",
       "Bash(gh auth:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(flutter clean:*)"
     ],
     "additionalDirectories": [
       "c:\\src\\ondohosei_date 2\\.github"

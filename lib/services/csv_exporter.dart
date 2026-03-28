@@ -1,59 +1,99 @@
 import 'dart:io';
 import 'dart:math' show max, min;
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path_provider/path_provider.dart';
 import 'database_helper.dart';
+import 'web_download_stub.dart'
+    if (dart.library.js_interop) 'web_download_web.dart';
 
 class CsvExporter {
   static Future<List<String>?> export(List<TemperatureRecord> records) async {
-    if (Platform.isAndroid) {
-      final status = await Permission.storage.request();
-      if (status.isDenied || status.isPermanentlyDenied) return null;
+    if (kIsWeb) {
+      return _exportWeb(records);
+    } else {
+      return _exportMobile(records);
     }
+  }
 
-    final downloadsDir = Directory('/storage/emulated/0/Download');
-    if (!downloadsDir.existsSync()) {
-      downloadsDir.createSync(recursive: true);
-    }
+  // ── Web: ブラウザダウンロード ─────────────────────
 
-    final now = DateTime.now();
-    final stamp =
-        '${now.year}${_p(now.month)}${_p(now.day)}_${_p(now.hour)}${_p(now.minute)}';
+  static Future<List<String>?> _exportWeb(
+      List<TemperatureRecord> records) async {
+    final stamp = _stamp();
 
+    await downloadBytesOnWeb(
+      _bom + _dataListCsv(records).codeUnits,
+      'ondohosei_データ一覧_$stamp.csv',
+    );
+    await downloadBytesOnWeb(
+      _bom +
+          _summaryCsv(
+            title: '月別　温度差集計',
+            records: records,
+            keyOf: (r) => '${r.dateTime.year}/${_p(r.dateTime.month)}',
+            labelOf: (k) => k,
+          ).codeUnits,
+      'ondohosei_月別集計_$stamp.csv',
+    );
+    await downloadBytesOnWeb(
+      _bom +
+          _summaryCsv(
+            title: '製品寸法別　温度差集計',
+            records: records,
+            keyOf: (r) => r.productSize.toStringAsFixed(0),
+            labelOf: (k) => '${k}mm',
+          ).codeUnits,
+      'ondohosei_寸法別集計_$stamp.csv',
+    );
+    await downloadBytesOnWeb(
+      _bom +
+          _summaryCsv(
+            title: '50mmグループ別　温度差集計',
+            records: records,
+            keyOf: (r) {
+              final lower = (r.productSize / 50).floor() * 50;
+              return '$lower';
+            },
+            labelOf: (k) => '$k〜${int.parse(k) + 50}mm',
+          ).codeUnits,
+      'ondohosei_50mmグループ集計_$stamp.csv',
+    );
+    return ['(ブラウザのダウンロードフォルダに保存されました)'];
+  }
+
+  // ── Mobile: ファイル保存 ──────────────────────────
+
+  static Future<List<String>?> _exportMobile(
+      List<TemperatureRecord> records) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final stamp = _stamp();
     final saved = <String>[];
 
-    // ① データ一覧
-    final dataFile = File('${downloadsDir.path}/ondohosei_データ一覧_$stamp.csv');
-    await dataFile.writeAsBytes(_bom + _dataListCsv(records).codeUnits);
-    saved.add(dataFile.path);
+    Future<void> write(String name, String content) async {
+      final file = File('${dir.path}/$name');
+      await file.writeAsBytes(_bom + content.codeUnits);
+      saved.add(file.path);
+    }
 
-    // ② 月別集計
-    final monthFile = File('${downloadsDir.path}/ondohosei_月別集計_$stamp.csv');
-    await monthFile.writeAsBytes(_bom +
+    await write('ondohosei_データ一覧_$stamp.csv', _dataListCsv(records));
+    await write(
+        'ondohosei_月別集計_$stamp.csv',
         _summaryCsv(
           title: '月別　温度差集計',
           records: records,
-          keyOf: (r) =>
-              '${r.dateTime.year}/${_p(r.dateTime.month)}',
+          keyOf: (r) => '${r.dateTime.year}/${_p(r.dateTime.month)}',
           labelOf: (k) => k,
-        ).codeUnits);
-    saved.add(monthFile.path);
-
-    // ③ 寸法別集計
-    final sizeFile =
-        File('${downloadsDir.path}/ondohosei_寸法別集計_$stamp.csv');
-    await sizeFile.writeAsBytes(_bom +
+        ));
+    await write(
+        'ondohosei_寸法別集計_$stamp.csv',
         _summaryCsv(
           title: '製品寸法別　温度差集計',
           records: records,
           keyOf: (r) => r.productSize.toStringAsFixed(0),
           labelOf: (k) => '${k}mm',
-        ).codeUnits);
-    saved.add(sizeFile.path);
-
-    // ④ 50mmグループ集計
-    final groupFile =
-        File('${downloadsDir.path}/ondohosei_50mmグループ集計_$stamp.csv');
-    await groupFile.writeAsBytes(_bom +
+        ));
+    await write(
+        'ondohosei_50mmグループ集計_$stamp.csv',
         _summaryCsv(
           title: '50mmグループ別　温度差集計',
           records: records,
@@ -62,14 +102,18 @@ class CsvExporter {
             return '$lower';
           },
           labelOf: (k) => '$k〜${int.parse(k) + 50}mm',
-        ).codeUnits);
-    saved.add(groupFile.path);
-
+        ));
     return saved;
   }
 
-  // UTF-8 BOM（Excelで文字化けしないように）
+  // ── 共通ユーティリティ ────────────────────────────
+
   static final List<int> _bom = [0xEF, 0xBB, 0xBF];
+
+  static String _stamp() {
+    final now = DateTime.now();
+    return '${now.year}${_p(now.month)}${_p(now.day)}_${_p(now.hour)}${_p(now.minute)}';
+  }
 
   static String _p(int n) => n.toString().padLeft(2, '0');
 
@@ -79,8 +123,6 @@ class CsvExporter {
     }
     return s;
   }
-
-  // ── データ一覧CSV ────────────────────────────────
 
   static String _dataListCsv(List<TemperatureRecord> records) {
     final buf = StringBuffer();
@@ -107,8 +149,6 @@ class CsvExporter {
     }
     return buf.toString();
   }
-
-  // ── 集計CSV ─────────────────────────────────────
 
   static String _summaryCsv({
     required String title,

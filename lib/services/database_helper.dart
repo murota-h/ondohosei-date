@@ -1,5 +1,5 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TemperatureRecord {
   final int? id;
@@ -69,67 +69,65 @@ class TemperatureRecord {
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
+  static const _key = 'temperature_records';
 
   DatabaseHelper._init();
 
-  Future<Database> get database async {
-    _database ??= await _initDB('temperature_records.db');
-    return _database!;
-  }
-
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-    return openDatabase(path, version: 1, onCreate: _createDB);
-  }
-
-  Future<void> _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE records (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        dateTime TEXT NOT NULL,
-        productSize REAL NOT NULL,
-        masterTemp REAL NOT NULL,
-        workTemp REAL NOT NULL,
-        tempDiff REAL NOT NULL,
-        correctionValue REAL NOT NULL,
-        isAbnormal INTEGER NOT NULL
-      )
-    ''');
+  Future<List<TemperatureRecord>> getAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_key);
+    if (jsonStr == null) return [];
+    final List<dynamic> list = jsonDecode(jsonStr) as List<dynamic>;
+    return list
+        .map((m) => TemperatureRecord.fromMap(m as Map<String, dynamic>))
+        .toList();
   }
 
   Future<int> insert(TemperatureRecord record) async {
-    final db = await database;
-    return db.insert('records', record.toMap());
-  }
-
-  Future<List<TemperatureRecord>> getAll() async {
-    final db = await database;
-    final maps = await db.query('records', orderBy: 'dateTime DESC');
-    return maps.map(TemperatureRecord.fromMap).toList();
+    final records = await getAll();
+    final newId = records.isEmpty
+        ? 1
+        : records.map((r) => r.id ?? 0).reduce((a, b) => a > b ? a : b) + 1;
+    records.add(record.copyWith(id: newId));
+    await _save(records);
+    return newId;
   }
 
   Future<int> update(TemperatureRecord record) async {
-    final db = await database;
-    return db.update('records', record.toMap(),
-        where: 'id = ?', whereArgs: [record.id]);
+    final records = await getAll();
+    final idx = records.indexWhere((r) => r.id == record.id);
+    if (idx == -1) return 0;
+    records[idx] = record;
+    await _save(records);
+    return 1;
   }
 
   Future<int> delete(int id) async {
-    final db = await database;
-    return db.delete('records', where: 'id = ?', whereArgs: [id]);
+    final records = await getAll();
+    final before = records.length;
+    records.removeWhere((r) => r.id == id);
+    await _save(records);
+    return before - records.length;
   }
 
   Future<int> deleteAll() async {
-    final db = await database;
-    return db.delete('records');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+    return 1;
   }
 
   Future<void> deleteByIds(List<int> ids) async {
     if (ids.isEmpty) return;
-    final db = await database;
-    final placeholders = ids.map((_) => '?').join(',');
-    await db.delete('records', where: 'id IN ($placeholders)', whereArgs: ids);
+    final records = await getAll();
+    records.removeWhere((r) => ids.contains(r.id));
+    await _save(records);
+  }
+
+  Future<void> _save(List<TemperatureRecord> records) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _key,
+      jsonEncode(records.map((r) => r.toMap()).toList()),
+    );
   }
 }
