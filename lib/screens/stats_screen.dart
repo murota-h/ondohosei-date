@@ -326,7 +326,7 @@ class _StatsScreenState extends State<StatsScreen> {
         body: TabBarView(
           children: [
             _GraphTab(refreshNotifier: _refreshNotifier),
-            _DataListTab(onDataChanged: _onDataChanged),
+            _DataListTab(onDataChanged: _onDataChanged, refreshNotifier: _refreshNotifier),
           ],
         ),
       ),
@@ -861,7 +861,8 @@ class _GraphTabState extends State<_GraphTab>
 
 class _DataListTab extends StatefulWidget {
   final VoidCallback onDataChanged;
-  const _DataListTab({required this.onDataChanged});
+  final ValueNotifier<int> refreshNotifier;
+  const _DataListTab({required this.onDataChanged, required this.refreshNotifier});
   @override
   State<_DataListTab> createState() => _DataListTabState();
 }
@@ -873,7 +874,14 @@ class _DataListTabState extends State<_DataListTab> {
   @override
   void initState() {
     super.initState();
+    widget.refreshNotifier.addListener(_loadData);
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    widget.refreshNotifier.removeListener(_loadData);
+    super.dispose();
   }
 
   Future<void> _loadData() async {
