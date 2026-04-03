@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'main_navigation.dart';
 import 'stats_screen.dart';
+import '../services/app_localizations.dart';
+import '../services/lang_notifier.dart';
 
 class TitleScreen extends StatefulWidget {
   const TitleScreen({super.key});
@@ -34,8 +36,75 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
     super.dispose();
   }
 
+  void _showLanguagePicker(BuildContext context) {
+    final langNotifier = LangNotifier.of(context);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1B2E3C),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40, height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Text(
+                  AppLocalizations.of(context)('langSelect'),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...AppLocalizations.supportedLanguages.map((lang) {
+                  return ValueListenableBuilder<String>(
+                    valueListenable: langNotifier,
+                    builder: (_, current, __) {
+                      final isSelected = current == lang['code'];
+                      return ListTile(
+                        leading: Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
+                        title: Text(
+                          lang['label']!,
+                          style: TextStyle(
+                            color: isSelected ? Colors.orangeAccent : Colors.white,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 16,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(Icons.check, color: Colors.orangeAccent, size: 20)
+                            : null,
+                        onTap: () {
+                          langNotifier.value = lang['code']!;
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tr = AppLocalizations.of(context);
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     return Scaffold(
       body: Container(
@@ -49,10 +118,8 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
         ),
         child: Stack(
           children: [
-            // 背景グリッドライン
             CustomPaint(painter: _GridPainter(), child: const SizedBox.expand()),
-            // メインコンテンツ
-            isLandscape ? _buildLandscape(context) : _buildPortrait(context),
+            isLandscape ? _buildLandscape(context, tr) : _buildPortrait(context, tr),
             // バージョン・開発者情報
             const Positioned(
               bottom: 12, left: 0, right: 0,
@@ -62,13 +129,42 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                 Text('Developer: H.Murota', style: TextStyle(fontSize: 12, color: Colors.white54)),
               ]),
             ),
+            // 言語切替ボタン（右上）
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              right: 12,
+              child: GestureDetector(
+                onTap: () => _showLanguagePicker(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.language, size: 16, color: Colors.white70),
+                      const SizedBox(width: 4),
+                      Text(
+                        AppLocalizations.supportedLanguages
+                            .firstWhere((l) => l['code'] == LangNotifier.of(context).value,
+                                orElse: () => AppLocalizations.supportedLanguages.first)['flag']!,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPortrait(BuildContext context) {
+  Widget _buildPortrait(BuildContext context, AppLocalizations tr) {
     return Center(
       child: AnimatedBuilder(
         animation: _controller,
@@ -84,34 +180,30 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
           children: [
             _buildIcon(),
             const SizedBox(height: 16),
-            _buildSubtitle(),
+            _buildSubtitle(tr),
             const SizedBox(height: 12),
-            _buildTitle(),
+            _buildTitle(tr),
             const SizedBox(height: 8),
             _buildDividerLine(),
             const SizedBox(height: 60),
             _buildStartButton(context),
             const SizedBox(height: 16),
-            _buildStatsButton(context),
+            _buildStatsButton(context, tr),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLandscape(BuildContext context) {
+  Widget _buildLandscape(BuildContext context, AppLocalizations tr) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) => Opacity(
         opacity: _fadeIn.value,
-        child: Transform.translate(
-          offset: Offset(0, _slideUp.value),
-          child: child,
-        ),
+        child: Transform.translate(offset: Offset(0, _slideUp.value), child: child),
       ),
       child: Row(
         children: [
-          // 左：アイコン＋タイトル
           Expanded(
             child: Center(
               child: Column(
@@ -119,16 +211,15 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                 children: [
                   _buildIcon(),
                   const SizedBox(height: 12),
-                  _buildSubtitle(),
+                  _buildSubtitle(tr),
                   const SizedBox(height: 8),
-                  _buildTitle(),
+                  _buildTitle(tr),
                   const SizedBox(height: 6),
                   _buildDividerLine(),
                 ],
               ),
             ),
           ),
-          // 縦の区切り
           Container(
             width: 1,
             height: double.infinity,
@@ -140,7 +231,6 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
               ),
             ),
           ),
-          // 右：ボタン群
           Expanded(
             child: Center(
               child: Column(
@@ -148,7 +238,7 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                 children: [
                   _buildStartButton(context),
                   const SizedBox(height: 16),
-                  _buildStatsButton(context),
+                  _buildStatsButton(context, tr),
                 ],
               ),
             ),
@@ -180,14 +270,14 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildSubtitle() => Text(
-    '一体型仕上げ組',
+  Widget _buildSubtitle(AppLocalizations tr) => Text(
+    tr('subtitle'),
     style: TextStyle(fontSize: 13, letterSpacing: 6, color: Colors.orangeAccent.withAlpha(200), fontWeight: FontWeight.w400),
   );
 
-  Widget _buildTitle() => const Text(
-    '温度補正システム',
-    style: TextStyle(
+  Widget _buildTitle(AppLocalizations tr) => Text(
+    tr('appName'),
+    style: const TextStyle(
       fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white,
       letterSpacing: 4.0,
       shadows: [Shadow(color: Colors.orangeAccent, blurRadius: 20)],
@@ -205,9 +295,12 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
     Navigator.push(context, MaterialPageRoute(builder: (context) => const MainNavigation()));
   });
 
-  Widget _buildStatsButton(BuildContext context) => _StatsButton(onPressed: () {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const StatsScreen()));
-  });
+  Widget _buildStatsButton(BuildContext context, AppLocalizations tr) => _StatsButton(
+    label: tr('statsBtn'),
+    onPressed: () {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const StatsScreen()));
+    },
+  );
 }
 
 class _StartButton extends StatefulWidget {
@@ -269,7 +362,8 @@ class _StartButtonState extends State<_StartButton> with SingleTickerProviderSta
 
 class _StatsButton extends StatelessWidget {
   final VoidCallback onPressed;
-  const _StatsButton({required this.onPressed});
+  final String label;
+  const _StatsButton({required this.onPressed, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -286,11 +380,11 @@ class _StatsButton extends StatelessWidget {
         elevation: 0,
         shadowColor: Colors.transparent,
       ),
-      child: const Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.bar_chart, size: 18, color: Color(0xFF4FC3F7)),
-        SizedBox(width: 10),
-        Text('統計・データ',
-            style: TextStyle(
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.bar_chart, size: 18, color: Color(0xFF4FC3F7)),
+        const SizedBox(width: 10),
+        Text(label,
+            style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 3,

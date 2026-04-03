@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../services/database_helper.dart';
 import '../services/csv_exporter.dart';
 import '../services/excel_exporter.dart';
+import '../services/app_localizations.dart';
 import '../widgets/numeric_keypad.dart';
 
 // ══════════════════════════════════════════
@@ -23,6 +24,7 @@ class _StatsScreenState extends State<StatsScreen> {
   void _onDataChanged() => _refreshNotifier.value++;
 
   void _showHelp(BuildContext context) {
+    final tr = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -37,7 +39,6 @@ class _StatsScreenState extends State<StatsScreen> {
           controller: scrollController,
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // ハンドル
             Center(
               child: Container(
                 width: 40, height: 4,
@@ -47,66 +48,48 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // タイトル
-            const Row(children: [
-              Icon(Icons.help_outline, color: Colors.blueGrey),
-              SizedBox(width: 8),
-              Text('統計・データ　使い方',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Row(children: [
+              const Icon(Icons.help_outline, color: Colors.blueGrey),
+              const SizedBox(width: 8),
+              Text(tr('helpStatsTitle'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ]),
             const SizedBox(height: 20),
 
-            _helpSection('グラフタブ', Icons.bar_chart, [
-              _helpItem('表示切替',
-                  '画面上部の「月別」「寸法別」「50mmグループ」ボタンで集計の切り方を切り替えられます。'),
-              _helpItem('棒グラフの色',
-                  '赤いバー → 製品温度が模範より高い（＋）\n青いバー → 製品温度が模範より低い（−）'),
-              _helpItem('タップで詳細',
-                  'グラフの棒をタップすると、区分名・平均温度差・件数がポップアップ表示されます。'),
-              _helpItem('集計テーブル',
-                  'グラフ下部（横向き時は右側）に各区分の件数・平均・最大・最小を一覧表示します。'),
-              _helpItem('平均列の見方',
-                  '平均列は黄色背景・太字で強調表示されます。\n赤字 → 製品温度が模範より高い（＋）\n青字 → 製品温度が模範より低い（−）'),
-              _helpItem('並び替え',
-                  '集計テーブルの列ヘッダー（区分・件数・平均・最大・最小）をタップすると、その列で並び替えができます。同じ列を再タップすると昇順・降順が切り替わります。▲▼アイコンで現在の並び順を確認できます。'),
+            _helpSection(tr('helpGraphSection'), Icons.bar_chart, [
+              _helpItem(tr('helpGraphMode'), tr('helpGraphModeDesc')),
+              _helpItem(tr('helpGraphColor'), tr('helpGraphColorDesc')),
+              _helpItem(tr('helpGraphTap'), tr('helpGraphTapDesc')),
+              _helpItem(tr('helpGraphTable'), tr('helpGraphTableDesc')),
+              _helpItem(tr('helpGraphAvg'), tr('helpGraphAvgDesc')),
+              _helpItem(tr('helpGraphSort'), tr('helpGraphSortDesc')),
             ]),
             const SizedBox(height: 16),
 
-            _helpSection('データ一覧タブ', Icons.list_alt, [
-              _helpItem('⚠️ マーク',
-                  '温度差が±10°C以上のデータには警告マークが付きます。計測ミスの可能性があるデータの確認に使ってください。'),
-              _helpItem('データを編集する',
-                  '行をタップすると編集シートが開きます。テンキーで値を修正し「保存」を押してください。編集後はグラフに即時反映されます。'),
-              _helpItem('データを削除する',
-                  '行を左にスワイプすると削除ボタンが現れます。確認ダイアログで「削除」を押すと削除されます。'),
+            _helpSection(tr('helpDataSection'), Icons.list_alt, [
+              _helpItem(tr('helpDataAbnormal'), tr('helpDataAbnormalDesc')),
+              _helpItem(tr('helpDataEdit'), tr('helpDataEditDesc')),
+              _helpItem(tr('helpDataDelete'), tr('helpDataDeleteDesc')),
             ]),
             const SizedBox(height: 16),
 
-            _helpSection('区分を削除する', Icons.playlist_remove, [
-              _helpItem('操作手順',
-                  '① グラフタブのモード切替右横にある🗑アイコンをタップ\n② 削除したい区分にチェックを入れる\n③「○区分を削除」ボタンをタップ'),
-              _helpItem('注意',
-                  '区分を削除すると、その区分に属するすべての計測データも同時に削除されます。元に戻すことはできません。'),
+            _helpSection(tr('helpCategorySection'), Icons.playlist_remove, [
+              _helpItem(tr('helpGraphMode'), tr('helpCategoryDesc')),
+              _helpItem(tr('helpCategoryNote'), tr('helpCategoryNoteDesc')),
             ]),
             const SizedBox(height: 16),
 
-            _helpSection('全データ削除', Icons.delete_sweep, [
-              _helpItem('操作手順',
-                  '画面右上の🗑アイコンをタップすると、全データを一括削除できます。'),
-              _helpItem('注意',
-                  'すべての記録が削除されます。この操作は元に戻せません。'),
+            _helpSection(tr('helpDeleteAllSection'), Icons.delete_sweep, [
+              _helpItem(tr('helpGraphMode'), tr('helpDeleteAllDesc')),
+              _helpItem(tr('helpDeleteAllNote'), tr('helpDeleteAllNoteDesc')),
             ]),
             const SizedBox(height: 16),
 
-            _helpSection('ファイル保存（エクスポート）', Icons.file_download_outlined, [
-              _helpItem('操作手順',
-                  '画面右上の ↓ アイコンをタップすると形式を選ぶダイアログが表示されます。\n「CSV」または「Excel」を選んで保存してください。'),
-              _helpItem('CSV形式',
-                  'どの版のExcelでも確実に開けます。4つのファイルに分けて保存されます。\n・データ一覧\n・月別集計\n・寸法別集計\n・50mmグループ集計'),
-              _helpItem('Excel形式（.xlsx）',
-                  'Excel 2007以降で開けます。1ファイルに4シートまとめて保存されます。古いExcel（2003以前）では開けない場合があります。'),
-              _helpItem('保存先',
-                  '端末のダウンロードフォルダに保存されます。\nファイル名：ondohosei_データ種別_日時.csv（またはxlsx）'),
+            _helpSection(tr('helpExportSection'), Icons.file_download_outlined, [
+              _helpItem(tr('helpGraphMode'), tr('helpExportDesc')),
+              _helpItem(tr('helpExportCsv'), tr('helpExportCsvDesc')),
+              _helpItem(tr('helpExportExcel'), tr('helpExportExcelDesc')),
+              _helpItem(tr('helpExportSave'), tr('helpExportSaveDesc')),
             ]),
           ]),
         ),
@@ -158,34 +141,34 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Future<void> _exportToExcel(BuildContext context) async {
+    final tr = AppLocalizations.of(context);
     final records = await DatabaseHelper.instance.getAll();
     if (!context.mounted) return;
 
     if (records.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('エクスポートするデータがありません')),
+        SnackBar(content: Text(tr('noData'))),
       );
       return;
     }
 
-    // 形式選択ダイアログ
     final format = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(children: [
-          Icon(Icons.file_download_outlined, color: Colors.blueGrey),
-          SizedBox(width: 8),
-          Text('エクスポート形式'),
+        title: Row(children: [
+          const Icon(Icons.file_download_outlined, color: Colors.blueGrey),
+          const SizedBox(width: 8),
+          Text(tr('exportTitle')),
         ]),
-        content: const Text('ダウンロードフォルダに保存します。\n形式を選んでください。'),
+        content: Text(tr('exportDesc')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('キャンセル'),
+            child: Text(tr('dialogCancel')),
           ),
           ElevatedButton.icon(
             icon: const Icon(Icons.grid_on, size: 18),
-            label: const Text('CSV'),
+            label: Text(tr('csvLabel')),
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[700],
                 foregroundColor: Colors.white),
@@ -193,7 +176,7 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
           ElevatedButton.icon(
             icon: const Icon(Icons.table_chart, size: 18),
-            label: const Text('Excel'),
+            label: Text(tr('excelLabel')),
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[800],
                 foregroundColor: Colors.white),
@@ -205,14 +188,13 @@ class _StatsScreenState extends State<StatsScreen> {
 
     if (format == null || !context.mounted) return;
 
-    // 作成中スナックバー
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(children: [
           const SizedBox(width: 20, height: 20,
               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
           const SizedBox(width: 12),
-          Text(format == 'csv' ? 'CSVファイルを作成中...' : 'Excelファイルを作成中...'),
+          Text(format == 'csv' ? tr('creatingCsv') : tr('creatingExcel')),
         ]),
         duration: const Duration(seconds: 15),
       ),
@@ -224,20 +206,18 @@ class _StatsScreenState extends State<StatsScreen> {
     if (format == 'csv') {
       final paths = await CsvExporter.export(records);
       success = paths != null;
-      if (paths != null) resultMessage = '${paths.length}ファイルをダウンロードフォルダに保存しました';
+      if (paths != null) resultMessage = tr('exportSuccess').replaceAll('{n}', '${paths.length}');
     } else {
       final path = await ExcelExporter.export(records);
       success = path != null;
-      if (path != null) resultMessage = 'ダウンロード/${path.split('/').last}';
+      if (path != null) resultMessage = path.split('/').last;
     }
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success
-            ? resultMessage!
-            : 'エクスポート失敗：ストレージの権限を確認してください'),
+        content: Text(success ? resultMessage! : tr('exportFail')),
         backgroundColor: success ? Colors.green[700] : Colors.red,
         duration: const Duration(seconds: 5),
       ),
@@ -245,24 +225,25 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Future<void> _confirmResetAll(BuildContext context) async {
+    final tr = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.red),
-          SizedBox(width: 8),
-          Text('全データ削除'),
+        title: Row(children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.red),
+          const SizedBox(width: 8),
+          Text(tr('deleteAllTitle')),
         ]),
-        content: const Text('すべての記録データを削除します。\nこの操作は元に戻せません。\n\nよろしいですか？'),
+        content: Text(tr('deleteAllMsg')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('キャンセル')),
+              child: Text(tr('dialogCancel'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('全削除'),
+            child: Text(tr('deleteBtn')),
           ),
         ],
       ),
@@ -281,44 +262,45 @@ class _StatsScreenState extends State<StatsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLocalizations.of(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('統計・データ',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          title: Text(tr('statsTitle'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           actions: [
             IconButton(
               icon: const Icon(Icons.help_outline),
-              tooltip: '使い方',
+              tooltip: tr('howToUse'),
               onPressed: () => _showHelp(context),
             ),
             IconButton(
               icon: const Icon(Icons.file_download_outlined),
-              tooltip: 'Excelエクスポート',
+              tooltip: tr('export'),
               onPressed: () => _exportToExcel(context),
             ),
             IconButton(
               icon: const Icon(Icons.delete_sweep),
-              tooltip: '全データ削除',
+              tooltip: tr('deleteAllBtn'),
               onPressed: () => _confirmResetAll(context),
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             tabAlignment: TabAlignment.fill,
             indicatorWeight: 2,
-            labelPadding: EdgeInsets.symmetric(vertical: 6),
+            labelPadding: const EdgeInsets.symmetric(vertical: 6),
             tabs: [
               Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.bar_chart, size: 16),
-                SizedBox(width: 4),
-                Text('グラフ', style: TextStyle(fontSize: 12)),
+                const Icon(Icons.bar_chart, size: 16),
+                const SizedBox(width: 4),
+                Text(tr('tabGraph'), style: const TextStyle(fontSize: 12)),
               ]),
               Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.list_alt, size: 16),
-                SizedBox(width: 4),
-                Text('データ一覧', style: TextStyle(fontSize: 12)),
+                const Icon(Icons.list_alt, size: 16),
+                const SizedBox(width: 4),
+                Text(tr('tabData'), style: const TextStyle(fontSize: 12)),
               ]),
             ],
           ),
@@ -472,13 +454,16 @@ class _GraphTabState extends State<_GraphTab>
                     borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 12),
-              Row(children: [
-                const Text('削除する区分を選択',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const Spacer(),
-                Text('${selected.length}件選択中',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              ]),
+              Builder(builder: (ctx2) {
+                final tr = AppLocalizations.of(ctx2);
+                return Row(children: [
+                  Text(tr('selectCategory'),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  Text(tr('selectedCount').replaceAll('{n}', '${selected.length}'),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ]);
+              }),
               const Divider(height: 20),
               ConstrainedBox(
                 constraints: BoxConstraints(
@@ -498,7 +483,7 @@ class _GraphTabState extends State<_GraphTab>
                       title: Text(d.label.replaceAll('\n', ' '),
                           style: const TextStyle(fontWeight: FontWeight.w500)),
                       subtitle: Text(
-                          '${d.count}件  平均 ${d.avg.toStringAsFixed(2)}°C',
+                          '${d.count}  ${AppLocalizations.of(context)('colAvg')} ${d.avg.toStringAsFixed(2)}°C',
                           style: const TextStyle(fontSize: 12)),
                     );
                   }).toList(),
@@ -509,20 +494,23 @@ class _GraphTabState extends State<_GraphTab>
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('キャンセル'),
+                    child: Builder(builder: (c) => Text(AppLocalizations.of(c)('cancel2'))),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white),
-                    onPressed: selected.isEmpty ? null : deleteSelected,
-                    child: Text(selected.isEmpty
-                        ? '区分を選択してください'
-                        : '${selected.length}区分を削除'),
-                  ),
+                  child: Builder(builder: (c) {
+                    final tr = AppLocalizations.of(c);
+                    return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white),
+                      onPressed: selected.isEmpty ? null : deleteSelected,
+                      child: Text(selected.isEmpty
+                          ? tr('selectFirst')
+                          : tr('deleteCategoryBtn').replaceAll('{n}', '${selected.length}')),
+                    );
+                  }),
                 ),
               ]),
             ]),
@@ -543,8 +531,8 @@ class _GraphTabState extends State<_GraphTab>
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.bar_chart, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
-          const Text('データがまだありません',
-              style: TextStyle(color: Colors.grey, fontSize: 15)),
+          Text(AppLocalizations.of(context)('noData'),
+              style: const TextStyle(color: Colors.grey, fontSize: 15)),
           const SizedBox(height: 4),
           const Text('計算を実行するとデータが記録されます',
               style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -562,6 +550,7 @@ class _GraphTabState extends State<_GraphTab>
   }
 
   Widget _buildModeSelector() {
+    final tr = AppLocalizations.of(context);
     return Row(children: [
       Expanded(
         child: SegmentedButton<int>(
@@ -570,10 +559,10 @@ class _GraphTabState extends State<_GraphTab>
             visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
           ),
-          segments: const [
-            ButtonSegment(value: 0, label: Text('月別', style: TextStyle(fontSize: 11))),
-            ButtonSegment(value: 1, label: Text('寸法別', style: TextStyle(fontSize: 11))),
-            ButtonSegment(value: 2, label: Text('50mm\nグループ', style: TextStyle(fontSize: 10))),
+          segments: [
+            ButtonSegment(value: 0, label: Text(tr('modeMonthly'), style: const TextStyle(fontSize: 11))),
+            ButtonSegment(value: 1, label: Text(tr('modeSize'), style: const TextStyle(fontSize: 11))),
+            ButtonSegment(value: 2, label: Text(tr('modeGroup'), style: const TextStyle(fontSize: 10))),
           ],
           selected: {_mode},
           onSelectionChanged: (s) => setState(() => _mode = s.first),
@@ -582,7 +571,7 @@ class _GraphTabState extends State<_GraphTab>
       IconButton(
         icon: const Icon(Icons.playlist_remove, size: 20),
         color: Colors.red[400],
-        tooltip: '区分を削除',
+        tooltip: tr('helpCategorySection'),
         padding: const EdgeInsets.all(4),
         constraints: const BoxConstraints(),
         onPressed: _showCategoryDeleteSheet,
@@ -652,8 +641,8 @@ class _GraphTabState extends State<_GraphTab>
 
   Widget _buildChart(List<_ChartData> data, {bool flexible = false}) {
     if (data.isEmpty) {
-      return const SizedBox(
-          height: 220, child: Center(child: Text('データがありません')));
+      return SizedBox(
+          height: 220, child: Center(child: Text(AppLocalizations.of(context)('noData'))));
     }
     final positiveMax =
         data.where((d) => d.avg >= 0).fold(0.0, (m, d) => max(m, d.avg));
@@ -781,7 +770,8 @@ class _GraphTabState extends State<_GraphTab>
 
   Widget _buildSummaryTable(List<_ChartData> data) {
     if (data.isEmpty) return const SizedBox();
-    final modeLabel = ['月別', '寸法別', '50mmグループ別'][_mode];
+    final tr = AppLocalizations.of(context);
+    final modeLabel = [tr('modeMonthly'), tr('modeSize'), tr('modeGroup')][_mode];
     final sorted = _sortedData(data);
 
     Widget headerCell(String label, int col, {bool isAvg = false}) {
@@ -835,11 +825,11 @@ class _GraphTabState extends State<_GraphTab>
           },
           children: [
             TableRow(children: [
-              headerCell('区分', 0),
-              headerCell('件数', 1),
-              headerCell('平均(°C)', 2, isAvg: true),
-              headerCell('最大(°C)', 3),
-              headerCell('最小(°C)', 4),
+              headerCell(tr('colCategory'), 0),
+              headerCell(tr('colCount'), 1),
+              headerCell('${tr('colAvg')}(°C)', 2, isAvg: true),
+              headerCell('${tr('colMax')}(°C)', 3),
+              headerCell('${tr('colMin')}(°C)', 4),
             ]),
             ...sorted.map((d) => TableRow(children: [
                   _Cell(d.label.replaceAll('\n', ' ')),
@@ -891,20 +881,21 @@ class _DataListTabState extends State<_DataListTab> {
   }
 
   Future<bool> _confirmDelete() async {
+    final tr = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('削除確認'),
-        content: const Text('このデータを削除しますか？'),
+        title: Text(tr('deleteTitle')),
+        content: Text(tr('deleteMsg')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('キャンセル')),
+              child: Text(tr('dialogCancel'))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('削除'),
+            child: Text(tr('deleteBtn')),
           ),
         ],
       ),
@@ -920,7 +911,8 @@ class _DataListTabState extends State<_DataListTab> {
       TextEditingController(text: record.masterTemp.toStringAsFixed(1)),
       TextEditingController(text: record.workTemp.toStringAsFixed(1)),
     ];
-    final labels = ['製品寸法 (mm)', '模範温度 (°C)', '製品温度 (°C)'];
+    final tr = AppLocalizations.of(context);
+    final labels = [tr('fieldSize'), tr('fieldMasterTemp'), tr('fieldWorkTemp')];
     int activeIndex = 0;
 
     showModalBottomSheet(
@@ -970,8 +962,8 @@ class _DataListTabState extends State<_DataListTab> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(children: [
-                  const Text('データ編集',
-                      style: TextStyle(
+                  Text(tr('editTitle'),
+                      style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
                   const Spacer(),
                   Text(_formatDate(record.dateTime),
@@ -1018,7 +1010,7 @@ class _DataListTabState extends State<_DataListTab> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(sheetCtx),
-                      child: const Text('キャンセル'),
+                      child: Text(tr('cancel2')),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1028,7 +1020,7 @@ class _DataListTabState extends State<_DataListTab> {
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueGrey[700],
                           foregroundColor: Colors.white),
-                      child: const Text('保存'),
+                      child: Text(tr('save')),
                     ),
                   ),
                 ]),
@@ -1102,8 +1094,8 @@ class _DataListTabState extends State<_DataListTab> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.list_alt, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
-          const Text('データがまだありません',
-              style: TextStyle(color: Colors.grey, fontSize: 15)),
+          Text(AppLocalizations.of(context)('noData'),
+              style: const TextStyle(color: Colors.grey, fontSize: 15)),
         ]),
       );
     }

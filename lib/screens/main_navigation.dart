@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'calculation_screen.dart';
 import 'quick_reference_table.dart';
 import 'help_screen.dart';
+import '../services/app_localizations.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -15,13 +16,12 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    String title = '温度補正計算';
-    if (_selectedIndex == 1) title = '主要寸法 補正早見表';
-    if (_selectedIndex == 2) title = 'ヘルプ・使い方';
+    final tr = AppLocalizations.of(context);
+    final titles = [tr('navCalcTitle'), tr('navTableTitle'), tr('navHelpTitle')];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(titles[_selectedIndex], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: IconButton(icon: const Icon(Icons.home), onPressed: () => Navigator.pop(context)),
         actions: [

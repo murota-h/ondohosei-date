@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/app_localizations.dart';
 
 class QuickReferenceTable extends StatefulWidget {
   const QuickReferenceTable({super.key});
@@ -28,7 +29,7 @@ class _QuickReferenceTableState extends State<QuickReferenceTable> with Automati
           children: [
             // ヘッダー行
             TableRow(decoration: BoxDecoration(color: Colors.blueGrey[100]), children: [
-              const TableCell(child: Padding(padding: EdgeInsets.all(8), child: Text('寸法\\差', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)))),
+              TableCell(child: Padding(padding: const EdgeInsets.all(8), child: Text(AppLocalizations.of(context)('tableHeader'), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)))),
               ...tempDiffs.map((d) => TableCell(child: Center(child: Padding(padding: const EdgeInsets.all(8), child: Text('+$d', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)))))),
             ]),
             // データ行

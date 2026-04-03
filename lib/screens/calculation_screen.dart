@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/numeric_keypad.dart';
 import '../services/database_helper.dart';
+import '../services/app_localizations.dart';
 
 class CalculationScreen extends StatefulWidget {
   const CalculationScreen({super.key});
@@ -15,6 +16,7 @@ class _CalculationScreenState extends State<CalculationScreen>
   final _workTempController = TextEditingController();
   double _correctionValue = 0.0, _finalResult = 0.0, _currentSize = 0.0, _currentDiff = 0.0;
   final double alpha = 0.0000115;
+  late AppLocalizations _tr;
 
   late TextEditingController _activeController;
   int _activeIndex = 0;
@@ -75,25 +77,26 @@ class _CalculationScreenState extends State<CalculationScreen>
     // 温度差10度以上は確認ダイアログ
     if (tempDiff.abs() >= 10) {
       final sign = tempDiff > 0 ? '+' : '';
+      final tr = AppLocalizations.of(context);
       final confirmed = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Row(children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('確認'),
+          title: Row(children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text(tr('dialogConfirm')),
           ]),
           content: Text(
-            '温度差が $sign${tempDiff.toStringAsFixed(1)}°C です。\n10°C以上ですが、入力値は正しいですか？',
+            tr('dialogTempWarn').replaceAll('{diff}', '$sign${tempDiff.toStringAsFixed(1)}'),
           ),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('キャンセル')),
+                child: Text(tr('dialogCancel'))),
             ElevatedButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('計算実行')),
+                child: Text(tr('dialogExec'))),
           ],
         ),
       );
@@ -130,6 +133,7 @@ class _CalculationScreenState extends State<CalculationScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    _tr = AppLocalizations.of(context);
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
     return isLandscape ? _buildLandscape() : _buildPortrait();
@@ -234,8 +238,8 @@ class _CalculationScreenState extends State<CalculationScreen>
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 55),
         ),
-        child: const Text('計算実行',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        child: Text(_tr('calcBtn'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -264,15 +268,15 @@ class _CalculationScreenState extends State<CalculationScreen>
       children: [
         Row(
           children: [
-            Expanded(child: _buildFieldTile(index: 0, label: '製品の寸法 (mm)', controller: _sizeController)),
+            Expanded(child: _buildFieldTile(index: 0, label: _tr('fieldSize'), controller: _sizeController)),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _buildFieldTile(index: 1, label: '模範温度 (°C)', controller: _masterTempController)),
+            Expanded(child: _buildFieldTile(index: 1, label: _tr('fieldMasterTemp'), controller: _masterTempController)),
             const SizedBox(width: 10),
-            Expanded(child: _buildFieldTile(index: 2, label: '製品温度 (°C)', controller: _workTempController)),
+            Expanded(child: _buildFieldTile(index: 2, label: _tr('fieldWorkTemp'), controller: _workTempController)),
           ],
         ),
       ],
@@ -339,13 +343,13 @@ class _CalculationScreenState extends State<CalculationScreen>
       border: Border.all(color: Colors.blueGrey[200]!),
     ),
     child: Column(children: [
-      const Text('今回の補正量', style: TextStyle(fontSize: 13)),
+      Text(_tr('resultCorrection'), style: const TextStyle(fontSize: 13)),
       Text(
         '${_correctionValue >= 0 ? "+" : ""}${_correctionValue.toStringAsFixed(4)} mm',
         style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: _correctionValue >= 0 ? Colors.red : Colors.blue),
       ),
       const Divider(height: 15),
-      const Text('模範温度での換算寸法', style: TextStyle(fontSize: 13)),
+      Text(_tr('resultConverted'), style: const TextStyle(fontSize: 13)),
       Text('${_finalResult.toStringAsFixed(4)} mm', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
     ]),
   );
@@ -360,16 +364,16 @@ class _CalculationScreenState extends State<CalculationScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('【参考】温度補正値一覧', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+        Text(_tr('refTableTitle'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
         const SizedBox(height: 8),
         Table(
           border: TableBorder.all(color: Colors.grey[300]!),
           children: [
             TableRow(
               decoration: BoxDecoration(color: Colors.grey[200]),
-              children: const [
-                Padding(padding: EdgeInsets.all(8), child: Text('温度差', textAlign: TextAlign.center)),
-                Padding(padding: EdgeInsets.all(8), child: Text('補正量 (mm)', textAlign: TextAlign.center)),
+              children: [
+                Padding(padding: const EdgeInsets.all(8), child: Text(_tr('refTableTempDiff'), textAlign: TextAlign.center)),
+                Padding(padding: const EdgeInsets.all(8), child: Text(_tr('refTableCorrection'), textAlign: TextAlign.center)),
               ],
             ),
             ...diffList.map((diff) => _buildTableRow(diff)),
