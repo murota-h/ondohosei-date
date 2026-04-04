@@ -46,56 +46,66 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
       ),
       builder: (ctx) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40, height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
+                child: Column(children: [
+                  Container(
+                    width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Text(
-                  AppLocalizations.of(context)('langSelect'),
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    letterSpacing: 2,
+                  Text(
+                    AppLocalizations.of(context)('langSelect'),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      letterSpacing: 2,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                ...AppLocalizations.supportedLanguages.map((lang) {
-                  return ValueListenableBuilder<String>(
-                    valueListenable: langNotifier,
-                    builder: (_, current, __) {
-                      final isSelected = current == lang['code'];
-                      return ListTile(
-                        leading: Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
-                        title: Text(
-                          lang['label']!,
-                          style: TextStyle(
-                            color: isSelected ? Colors.orangeAccent : Colors.white,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 16,
-                          ),
-                        ),
-                        trailing: isSelected
-                            ? const Icon(Icons.check, color: Colors.orangeAccent, size: 20)
-                            : null,
-                        onTap: () {
-                          langNotifier.value = lang['code']!;
-                          Navigator.pop(ctx);
+                ]),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: AppLocalizations.supportedLanguages.map((lang) {
+                      return ValueListenableBuilder<String>(
+                        valueListenable: langNotifier,
+                        builder: (_, current, __) {
+                          final isSelected = current == lang['code'];
+                          return ListTile(
+                            dense: true,
+                            leading: Text(lang['flag']!, style: const TextStyle(fontSize: 22)),
+                            title: Text(
+                              lang['label']!,
+                              style: TextStyle(
+                                color: isSelected ? Colors.orangeAccent : Colors.white,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 15,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? const Icon(Icons.check, color: Colors.orangeAccent, size: 18)
+                                : null,
+                            onTap: () {
+                              langNotifier.value = lang['code']!;
+                              Navigator.pop(ctx);
+                            },
+                          );
                         },
                       );
-                    },
-                  );
-                }),
-              ],
-            ),
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
         );
       },
